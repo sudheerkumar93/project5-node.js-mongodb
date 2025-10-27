@@ -2,14 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Jenkins credential IDs
-        AZURE_CREDENTIALS = credentials('project-5-azure-sp')
-        MONGODB_URI = credentials('MONGODB_URI')
-        GITHUB_CREDS = credentials('github-id')
-
         // Azure environment
         AZURE_SUBSCRIPTION_ID = '75279c7b-6f2e-4e76-ae48-b6aeab569b34'
-        AZURE_TENANT_ID = '766ef0d9-c1c7-4a7f-93ca-5e74124c5fc9'
+        AZURE_TENANT_ID = '766ef0d9-c1c7-4e7f-93ca-5e74124c5fc9'
 
         // App-specific
         RESOURCE_GROUP = 'project-5'
@@ -48,18 +43,15 @@ pipeline {
 
         stage('Login to Azure') {
             steps {
-                withEnv([
-                    "AZURE_CLIENT_ID=${AZURE_CREDENTIALS_USR}",
-                    "AZURE_CLIENT_SECRET=${AZURE_CREDENTIALS_PSW}",
-                    "AZURE_TENANT_ID=${AZURE_TENANT_ID}",
-                    "AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}"
-                ]) {
+                // Use safe Jenkins credentials binding
+                withCredentials([usernamePassword(credentialsId: 'project-5-azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     sh '''
                         echo "🔐 Logging into Azure..."
                         az login --service-principal \
                             -u $AZURE_CLIENT_ID \
                             -p $AZURE_CLIENT_SECRET \
-                            --tenant $AZURE_TENANT_ID
+                            --tenant $AZURE_TENANT_ID \
+                            --output none --only-show-errors
 
                         az account set --subscription $AZURE_SUBSCRIPTION_ID
                     '''
@@ -83,13 +75,15 @@ pipeline {
 
         stage('Configure App Settings') {
             steps {
-                sh '''
-                    echo "⚙️  Setting environment variables..."
-                    az webapp config appsettings set \
-                        --name $APP_NAME \
-                        --resource-group $RESOURCE_GROUP \
-                        --settings MONGODB_URI=$MONGODB_URI NODE_ENV=$NODE_ENV
-                '''
+                withCredentials([string(credentialsId: 'MONGODB_URI', variable: 'MONGODB_URI')]) {
+                    sh '''
+                        echo "⚙️  Setting environment variables..."
+                        az webapp config appsettings set \
+                            --name $APP_NAME \
+                            --resource-group $RESOURCE_GROUP \
+                            --settings MONGODB_URI=$MONGODB_URI NODE_ENV=$NODE_ENV
+                    '''
+                }
             }
         }
     }
@@ -97,10 +91,11 @@ pipeline {
     post {
         success {
             echo '✅ CI/CD pipeline completed successfully!'
-            echo 'Your app is live at: https://nodejs-project5.azurewebsites.net'
+            echo "Your app is live at: https://$APP_NAME.azurewebsites.net"
         }
         failure {
             echo '❌ CI/CD pipeline failed. Please check the logs.'
         }
     }
 }
+
