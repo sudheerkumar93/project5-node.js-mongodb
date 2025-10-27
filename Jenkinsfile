@@ -76,7 +76,7 @@ pipeline {
 
         stage('Configure App Settings') {
             steps {
-                withCredentials([string(credentialsId: 'MONGODB_URI', variable: 'MONGODB_URI')]) {
+                withCredentials([string(credentialsId: 'MOGODB_URI', variable: 'MONGODB_URI')]) {
                     sh '''
                         echo "⚙️  Setting environment variables..."
                         az webapp config appsettings set \
