@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Azure environment
         AZURE_SUBSCRIPTION_ID = '75279c7b-6f2e-4e76-ae48-b6aeab569b34'
-        AZURE_TENANT_ID = '766ef0d9-c1c7-4e7f-93ca-5e74124c5fc9'
+        AZURE_TENANT_ID = '766ef0d9-c1c7-4a7f-93ca-5e74124c5fc9'
 
         // App-specific
         RESOURCE_GROUP = 'project-5'
