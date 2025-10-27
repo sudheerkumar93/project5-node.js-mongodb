@@ -1,41 +1,33 @@
-version: '3.8'
+# Use the official Node.js 20 image (Debian Bookworm)
+FROM node:20-bookworm
 
-services:
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ../..:/workspaces:cached
+# Set working directory
+WORKDIR /usr/src/app
 
-    environment: 
-      MONGODB_URI: mongodb://${ENV_DB_USER}:${ENV_DB_PASSWORD}@db:27017/${ENV_DB_DATABASE}?authSource=admin
+# Install MongoDB command-line tools
+ARG MONGO_TOOLS_VERSION=6.0
+RUN . /etc/os-release \
+    && curl -sSL "https://www.mongodb.org/static/pgp/server-${MONGO_TOOLS_VERSION}.asc" | gpg --dearmor > /usr/share/keyrings/mongodb-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] http://repo.mongodb.org/apt/debian ${VERSION_CODENAME}/mongodb-org/${MONGO_TOOLS_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGO_TOOLS_VERSION}.list \
+    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y mongodb-mongosh \
+    && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y mongodb-database-tools; fi \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-    # Overrides default command so things don't shut down after the process ends.
-    command: sleep infinity
+# Copy package.json and package-lock.json first for better caching
+COPY package*.json ./
 
-    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:db
+# Install dependencies
+RUN npm ci --only=production
 
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
+# Copy the rest of the app
+COPY . .
 
-  db:
-    image: mongo:latest
-    restart: unless-stopped
-    volumes:
-      - mongodb-data:/data/db
+# Expose port (Azure will override this with $PORT)
+EXPOSE 8080
 
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${ENV_DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${ENV_DB_PASSWORD}
+# Environment variable for Azure compatibility
+ENV PORT=8080
 
-    # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
-
-  redis:
-    image: redis
-    restart: unless-stopped
-
-volumes:
-  mongodb-data:
+# Start the Node.js application
+CMD [ "npm", "start" ]
