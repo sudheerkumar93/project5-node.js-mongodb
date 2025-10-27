@@ -43,9 +43,10 @@ pipeline {
 
         stage('Login to Azure') {
             steps {
-                // Use safe Jenkins credentials binding
-                withCredentials([string(credentialsId: 'AZURE_CLIENT_ID', variable: 'AZURE_CLIENT_ID'),
-            string(credentialsId: 'AZURE_CLIENT_SECRET', variable: 'AZURE_CLIENT_SECRET')]) {
+                withCredentials([
+                    string(credentialsId: 'AZURE_CLIENT_ID', variable: 'AZURE_CLIENT_ID'),
+                    string(credentialsId: 'AZURE_CLIENT_SECRET', variable: 'AZURE_CLIENT_SECRET')
+                ]) {
                     sh '''
                         echo "🔐 Logging into Azure..."
                         az login --service-principal \
@@ -76,7 +77,7 @@ pipeline {
 
         stage('Configure App Settings') {
             steps {
-                withCredentials([string(credentialsId: 'MOGODB_URI', variable: 'MONGODB_URI')]) {
+                withCredentials([string(credentialsId: 'MONGODB_URI', variable: 'MONGODB_URI')]) {
                     sh '''
                         echo "⚙️  Setting environment variables..."
                         az webapp config appsettings set \
@@ -92,11 +93,10 @@ pipeline {
     post {
         success {
             echo '✅ CI/CD pipeline completed successfully!'
-            echo "Your app is live at: https://$APP_NAME.azurewebsites.net"
+            echo "Your app is live at: https://${APP_NAME}.azurewebsites.net"
         }
         failure {
             echo '❌ CI/CD pipeline failed. Please check the logs.'
         }
     }
 }
-
