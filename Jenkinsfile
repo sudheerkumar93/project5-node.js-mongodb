@@ -22,7 +22,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/sudheerkumar93/node.js-project.git',
+                    url: 'https://github.com/sudheerkumar93/project5-node.js-mongodb.git',
                     credentialsId: 'github-id'
             }
         }
