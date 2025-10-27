@@ -44,7 +44,7 @@ pipeline {
         stage('Login to Azure') {
             steps {
                 // Use safe Jenkins credentials binding
-                withCredentials([usernamePassword(credentialsId: 'project-5-azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     sh '''
                         echo "🔐 Logging into Azure..."
                         az login --service-principal \
