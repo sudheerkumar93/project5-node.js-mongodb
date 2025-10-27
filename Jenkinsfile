@@ -67,7 +67,7 @@ pipeline {
                         --name $APP_NAME \
                         --resource-group $RESOURCE_GROUP \
                         --runtime "NODE|18-lts" \
-                        --location "East US" \
+                        --location "North Europe" \
                         --sku B1
                 '''
             }
