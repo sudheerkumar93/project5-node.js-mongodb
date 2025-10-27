@@ -67,7 +67,7 @@ pipeline {
                     az webapp up \
                         --name $APP_NAME \
                         --resource-group $RESOURCE_GROUP \
-                        --runtime "NODE|18-lts" \
+                        --runtime "NODE|20-lts" \
                         --location "North Europe" \
                         --sku B1
                 '''
